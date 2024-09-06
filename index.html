@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hammer Follows Cursor</title>
+  <style>
+     body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #7ec850; /* Green background */
+      overflow: hidden;
+      cursor: none; /* Hide the default cursor */
+      flex-direction: column;
+    }
+
+    .game-container {
+      display: grid;
+      grid-template-columns: repeat(3, 150px);
+      grid-gap: 10px;
+    }
+
+    .hole {
+      width: 150px;
+      height: 150px;
+      background-color: #654321; /* Brown hole background */
+      position: relative;
+      overflow: hidden;
+      border-radius: 50%;
+    }
+    button {
+        background-color: #f44336;
+        color:white;
+        width: 100px;
+        height: 100px;
+        font-size: 30px;
+    } /* Red */
+
+
+    .mole {
+      position: absolute;
+      width: 100px;
+      height: auto;
+      bottom: -100px; /* Start hidden below the hole */
+      left: 25px; /* Center the mole */
+      transition: bottom 0.3s ease; /* Smooth up and down transition */
+    }
+
+    .mole.up {
+      bottom: 10px; /* Move the mole up */
+    }
+
+    .hammer {
+      position: absolute;
+      width: 100px;
+      height: 100px;
+      background-image: url('hammer.png'); /* Replace with your hammer image */
+      background-size: cover;
+      transition: transform 0.1s, top 0.1s; /* Smooth following and movement */
+      pointer-events: none; /* Prevent the hammer from blocking clicks */
+      transform: scaleX(-1); 
+      
+    }
+
+    .hammer.down {
+      
+      transform: scaleX(-1) rotate(180deg); /* Hammer down animation */
+      top: calc(100% - 120px); /* Move down slightly */
+    }
+
+    .hammer.up {
+      
+      transform: scaleX(-1) rotate(0deg); /* Reset hammer rotation */
+      top: calc(100% - 140px); /* Move up slightly */
+    }
+  </style>
+</head>
+<body>
+    <button id="startGame" >Start Game</button>
+    <h1 id="countdown">Time left: 10</h1> <!-- Initial countdown value -->
+    
+    <div class="game-container">
+    <div class="hole"><img src="mole.png" alt="Mole" class="mole"></div>
+    <div class="hole"><img src="mole.png" alt="Mole" class="mole"></div>
+    <div class="hole"><img src="mole.png" alt="Mole" class="mole"></div>
+    <div class="hole"><img src="mole.png" alt="Mole" class="mole"></div>
+    <div class="hole"><img src="mole.png" alt="Mole" class="mole"></div>
+    <div class="hole"><img src="mole.png" alt="Mole" class="mole"></div>
+    </div>
+
+  <img src="hammer.png" class="hammer" id="hammer">
+
+  <script>
+    const hammer = document.getElementById('hammer');
+    let scores = 0;
+    // Update the hammer's position to follow the cursor
+    document.addEventListener('mousemove', (e) => {
+      hammer.style.left = `${e.clientX - 50}px`;
+      hammer.style.top = `${e.clientY - 50}px`;
+    });
+
+    // Add "hammer down" animation on mouse click
+    document.addEventListener('mousedown', () => {
+      hammer.classList.add('down');
+      hammer.classList.remove('up');
+    });
+
+    // Add "hammer up" animation when mouse button is released
+    document.addEventListener('mouseup', () => {
+      hammer.classList.remove('down');
+      hammer.classList.add('up');
+    });
+    //Add event listener to each mole
+    document.querySelectorAll(".mole").forEach(
+    x => x.addEventListener("click", (e) => {
+        // Check if the mole has already been hit
+        if (e.target.getAttribute("data-hit") === "true") return;
+
+        // Mark the mole as hit
+        e.target.setAttribute("data-hit", "true");
+
+        scores++; // Increment the score
+        e.target.src = "bam.png"; // Change image to "bam.png"
+
+        setTimeout(() => {
+            e.target.classList.remove("up"); // Hide the mole
+            e.target.src = "mole.png"; // Reset image to "mole.png"
+            e.target.setAttribute("data-hit", "false"); // Allow the mole to be hit again
+        }, 500);
+    })
+);
+
+    const moles = document.querySelectorAll('.mole');
+    
+    function randomTime(min, max) {
+      return Math.round(Math.random() * (max - min) + min);
+    }
+
+    function randomMole(moles) {
+      const index = Math.floor(Math.random() * moles.length);
+      const mole = moles[index];
+      return mole;
+    }
+    function popUpMole() {
+        if (!gameActive) return; // Stop the process if the game is no longer active
+
+      const time = randomTime(500, 2000);
+      const mole = randomMole(moles);
+      mole.classList.add('up');
+      setTimeout(() => {
+        mole.classList.remove('up');
+        popUpMole(); // Recursively call to keep the game going
+      }, time);
+    }
+    function hitMole(){
+
+    }
+    let  gameActive = true;
+    function startGame(){
+        scores = 0;   
+        gameActive = true
+        popUpMole();
+        var time = 10;
+        const countdownElement = document.querySelector("#countdown");
+        countdownElement.textContent = time;
+        const countdownInterval = setInterval(()=>{
+            time --;
+            countdownElement.textContent = time; // Display the current time
+            if (time <= 0) {
+            clearInterval(countdownInterval); // Stop the countdown when it reaches 0
+            countdownElement.textContent = "Time's up! You hit "+scores+" moles!"; // Display message when countdown is over
+            gameActive = false;
+            }
+           
+        },1000)
+    }
+     // Start the game
+    var startGameButton = document.querySelector("#startGame");
+    startGameButton.addEventListener("click",()=>{
+        startGame();
+    })
+  </script>
+
+</body>
+</html>
